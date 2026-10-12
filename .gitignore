@@ -1,0 +1,19 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+models_pkl/
+.idea/
+*.log
+mlruns/
+
+# 대용량 원본 데이터
+data/raw/
+
+# 압축 파일
+*.zip
+
+# mlflow
+mlruns/
+mlartifacts/
+mlflow.db
