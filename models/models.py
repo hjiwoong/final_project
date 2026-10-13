@@ -5,14 +5,20 @@ trips / boarding_events / alerts / notifications
 + attendances (학부모 앱 '자녀 출석/결석 설정'용, 기획안 화면 설계에서 추가)
 """
 import enum
+from datetime import datetime
 
 from sqlalchemy import (
     JSON, Boolean, Column, Date, DateTime, Enum, ForeignKey, Integer, String,
     Text, UniqueConstraint, func,
 )
+from sqlalchemy.dialects import mysql
 from sqlalchemy.orm import relationship
 
 from database.orm import Base
+
+# KPI(업로드→알림 지연)를 ms 단위로 재기 위한 마이크로초 정밀 시각
+# (MySQL 기본 DATETIME 은 초 단위라 DATETIME(6) 사용)
+DateTimeMs = DateTime().with_variant(mysql.DATETIME(fsp=6), "mysql")
 
 
 # ---------- Enum ----------
@@ -181,7 +187,7 @@ class BoardingEvent(Base):
     low_conf_count = Column(Integer, nullable=False, default=0)  # 신뢰도 낮은 검출 수
 
     captured_at = Column(DateTime, nullable=True)
-    uploaded_at = Column(DateTime, server_default=func.now())    # KPI: 업로드 시각
+    uploaded_at = Column(DateTimeMs, default=datetime.now)       # KPI: 서버가 사진을 받은 시각
     image_expires_at = Column(DateTime, nullable=True)           # 보관기간 만료 → 410
 
     trip = relationship("Trip", back_populates="events")
@@ -221,7 +227,7 @@ class Notification(Base):
 
     title = Column(String(255), nullable=False)
     body = Column(Text, nullable=True)
-    sent_at = Column(DateTime, server_default=func.now())   # KPI: 알림 시각
+    sent_at = Column(DateTimeMs, default=datetime.now)      # KPI: 알림 발송(기록) 시각
     read_at = Column(DateTime, nullable=True)
 
     alert = relationship("Alert", back_populates="notifications")
